@@ -110,19 +110,31 @@ mkdir -p dataset/solar/
 
 ### Step 2: 上传到服务器
 
+**方式 A: GitHub（推荐）**
+
+代码已推送到私有仓库 https://github.com/1053581017/FourierTM
+
 ```bash
-# 打包项目（排除 .git、缓存和数据集）
+# 服务器上首次 clone
+git clone https://github.com/1053581017/FourierTM.git
+cd FourierTM/
+
+# 后续更新（本地改完代码后）
+# 本地: git add -A && git commit -m "描述" && git push mine main
+# 服务器: cd FourierTM && git pull
+```
+
+**方式 B: scp 直传**
+
+```bash
+# 本地打包
 tar czf FourierTM.tar.gz \
   --exclude='.git' --exclude='__pycache__' --exclude='checkpoints' --exclude='results' \
   -C "01_Projects/技术支持/" FourierTM/
 
-# 上传
+# 上传 + 解压
 scp FourierTM.tar.gz <user>@<server>:~/
-
-# 服务器上解压
-ssh <user>@<server>
-tar xzf FourierTM.tar.gz
-cd FourierTM/
+ssh <user>@<server> "tar xzf FourierTM.tar.gz && cd FourierTM/"
 ```
 
 ### Step 3: 安装依赖

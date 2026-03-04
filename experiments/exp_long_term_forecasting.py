@@ -123,11 +123,17 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         criterion = self._select_criterion()
 
         if self.args.lradj == 'TST':
+            # When using separate lr for ASB (0.1x), pass per-group max_lr
+            # so OneCycleLR doesn't override the ASB learning rate
+            if self.args.model == 'FourierTM' and hasattr(self.model, 'asb') and self.model.asb is not None:
+                max_lrs = [self.args.learning_rate, self.args.learning_rate * 0.1]
+            else:
+                max_lrs = self.args.learning_rate
             scheduler = lr_scheduler.OneCycleLR(optimizer=model_optim,
                                                 steps_per_epoch=train_steps,
                                                 pct_start=self.args.pct_start,
                                                 epochs=self.args.train_epochs,
-                                                max_lr=self.args.learning_rate)
+                                                max_lr=max_lrs)
 
 
         if self.args.use_amp:

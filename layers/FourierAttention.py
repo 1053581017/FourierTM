@@ -83,7 +83,12 @@ class DualPathGeomAttention(nn.Module):
         self.output_attention = output_attention
         self.dropout = nn.Dropout(attention_dropout)
         self.alpha = alpha
-        self.fusion_gate = nn.Parameter(torch.tensor(0.5))
+        # Initialize fusion_gate from alpha: sigmoid(gate) ≈ alpha (wedge weight)
+        # so gate = logit(alpha). Clamp alpha to avoid inf.
+        alpha_clamped = max(min(alpha, 0.999), 0.001)
+        init_val = torch.log(torch.tensor(alpha_clamped / (1 - alpha_clamped)))
+        # gate controls wedge weight: output = (1-g)*dot + g*wedge
+        self.fusion_gate = nn.Parameter(init_val)
 
     def forward(self, queries, keys, values_dot, values_wedge):
         B, L, H, E = queries.shape
@@ -113,8 +118,10 @@ class DualPathGeomAttention(nn.Module):
         dot_out = torch.einsum("bhls,bshd->blhd", dot_attn, values_dot)
         wedge_out = torch.einsum("bhls,bshd->blhd", wedge_attn, values_wedge)
 
+        # g = sigmoid(fusion_gate) ≈ alpha initially
+        # Matches original: (1-alpha)*dot + alpha*wedge
         g = torch.sigmoid(self.fusion_gate)
-        output = g * dot_out + (1 - g) * wedge_out
+        output = (1 - g) * dot_out + g * wedge_out
 
         attn_reg = (dot_scores.abs().mean() + wedge_scores.abs().mean()) / 2
 
