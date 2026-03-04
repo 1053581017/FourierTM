@@ -3,7 +3,7 @@ import torch
 from experiments.exp_long_term_forecasting import Exp_Long_Term_Forecast
 import random
 import numpy as np
-from model.SimpleTM import Model
+from model.SimpleTM import Model as SimpleTMModel
 
 if __name__ == '__main__':
 
@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
 
     parser.add_argument('--model', type=str, required=True, default='SimpleTM',
-                        help='model name, options: [SimpleTM]')
+                        help='model name, options: [SimpleTM, FourierTM]')
 
     # data loader
     parser.add_argument('--data', type=str, required=True, default='custom', help='dataset type')
@@ -93,6 +93,14 @@ if __name__ == '__main__':
     parser.add_argument('--e_layers', type=int, default=1, help='Number of SimpleTM layers')
     parser.add_argument('--compile', type=bool, default=False, help='Set to True to enable compilation, which can accelerate speed but may slightly impact performance')
     parser.add_argument('--output_attention', action='store_true', help='Set to False to output attn, which can be used to compute training loss')
+
+    # FourierTM Arguments (ablation switches)
+    parser.add_argument('--use_asb', type=int, default=1, help='0=off, 1=on (ASB module)')
+    parser.add_argument('--tokenization', type=str, default='fft', choices=['fft', 'swt'],
+                        help='Tokenization method: fft or swt')
+    parser.add_argument('--attention_mode', type=str, default='dual_path', choices=['dual_path', 'combined'],
+                        help='Attention mode: dual_path (separate dot/wedge) or combined (original)')
+    parser.add_argument('--asb_n_bands', type=int, default=4, help='Number of frequency bands in ASB module')
 
     parser.add_argument('--fix_seed', type=int, default=2025, help='gpu')
     

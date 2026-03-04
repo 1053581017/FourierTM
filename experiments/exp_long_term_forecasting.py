@@ -33,7 +33,17 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate)
+        # Separate learning rate for ASB parameters (0.1x main lr)
+        if self.args.model == 'FourierTM' and hasattr(self.model, 'asb') and self.model.asb is not None:
+            asb_param_ids = set(id(p) for p in self.model.asb.parameters())
+            asb_params = list(self.model.asb.parameters())
+            other_params = [p for p in self.model.parameters() if id(p) not in asb_param_ids]
+            model_optim = optim.AdamW([
+                {'params': other_params, 'lr': self.args.learning_rate},
+                {'params': asb_params, 'lr': self.args.learning_rate * 0.1},
+            ])
+        else:
+            model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
     def _select_criterion(self):

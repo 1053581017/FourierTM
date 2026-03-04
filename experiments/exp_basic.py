@@ -1,5 +1,6 @@
 import os
 from model import SimpleTM
+from model import FourierTM
 import torch
 
 # Add this at the beginning of your training script
@@ -13,6 +14,7 @@ class Exp_Basic(object):
         self.args = args
         self.model_dict = {
             'SimpleTM': SimpleTM,
+            'FourierTM': FourierTM,
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
